@@ -1,60 +1,47 @@
-const MK = "$2a$10$6YYYPd5hjRWm8dbvcWSIWebcGuYrdJhWq//j2fJMZDUXpsB5jg1v6";
-const BURL = "https://kaos-backend.onrender.com/api/data";
-let BIN_ID = localStorage.getItem('kg_bin') || null;
+const BURL = "https://kaos-backend.onrender.com/api/data"; 
 let CU = null;
 let DB = { users:[], bugs:[], milestones:[], games:[], activity:[] };
 
-// ── JSONBIN DATABASE ──────────────────────────────────────────────────────────
+// ── CUSTOM MONGO BACKEND LOGIC ────────────────────────────────────────────────
 async function dbRead() {
-  if (!BIN_ID) return false;
   try {
-    const r = await fetch(`${BURL}/b/${BIN_ID}/latest`, { headers:{ 'X-Master-Key': MK } });
+    const r = await fetch(BURL);
     if (!r.ok) return false;
-    const d = await r.json();
-    DB = d.record;
+    DB = await r.json();
+    
+    // Auto-seed default admin if database is completely fresh
+    if (!DB.users || DB.users.length === 0) {
+      seed();
+      await dbWrite();
+    }
     return true;
-  } catch { return false; }
+  } catch (error) { 
+    console.error("Database read error:", error);
+    return false; 
+  }
 }
 
 async function dbWrite() {
-  if (!BIN_ID) return;
-  await fetch(`${BURL}/b/${BIN_ID}`, {
-    method:'PUT',
-    headers:{ 'Content-Type':'application/json', 'X-Master-Key': MK },
-    body: JSON.stringify(DB)
-  });
-}
-
-async function dbCreate() {
-  const r = await fetch(`${BURL}/b`, {
-    method:'POST',
-    headers:{ 'Content-Type':'application/json', 'X-Master-Key': MK, 'X-Bin-Name':'kaos-portal', 'X-Bin-Private':'true' },
-    body: JSON.stringify(DB)
-  });
-  const d = await r.json();
-  BIN_ID = d.metadata?.id;
-  if (BIN_ID) localStorage.setItem('kg_bin', BIN_ID);
-  return !!BIN_ID;
+  try {
+    await fetch(BURL, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(DB)
+    });
+  } catch (error) {
+    console.error("Database write error:", error);
+  }
 }
 
 // ── BOOT ──────────────────────────────────────────────────────────────────────
 async function boot() {
-  showL('Connecting to JSONBin...');
-  
-  ['kg_bins'].forEach(k => localStorage.removeItem(k));
-
-  if (BIN_ID) {
-    const ok = await dbRead();
-    if (!ok) { BIN_ID = null; localStorage.removeItem('kg_bin'); }
+  showL('Connecting to backend...');
+  const ok = await dbRead();
+  if (!ok) { 
+    hideL(); 
+    document.getElementById('lerr').textContent = 'Backend connection failed. Check your Render logs.'; 
+    return; 
   }
-
-  if (!BIN_ID) {
-    showL('First time setup...');
-    seed();
-    const ok = await dbCreate();
-    if (!ok) { hideL(); document.getElementById('lerr').textContent = 'Could not connect to database.'; return; }
-  }
-
   hideL();
   tryRestore();
 }
@@ -66,18 +53,11 @@ function seed() {
     { id:g2, name:'Formula', status:'development', desc:'Racing game on Roblox', created:now() }
   ];
   DB.users = [
-    { id:uid(), name:'Admin', username:'admin', password:'password123', role:'admin', games:[], created:now() },
-    { id:uid(), name:'Liminal', username:'liminal', password:'rfighters2026', role:'client', games:['R-Fighters','Formula'], created:now() },
-    { id:uid(), name:'QA Lead', username:'qa_lead', password:'qakaos2026', role:'qa', games:[], created:now() },
-    { id:uid(), name:'Developer', username:'dev_netsu', password:'dev2026', role:'dev', games:[], created:now() },
-    { id:uid(), name:'Project Manager', username:'pm_kaos', password:'pm2026', role:'pm', games:[], created:now() }
+    { id:uid(), name:'Admin', username:'admin', password:'password123', role:'admin', games:[], created:now() }
   ];
-  DB.milestones = [
-    { id:uid(), game:'R-Fighters', title:'Core Mechanics', date:'2026-05-23', status:'done', desc:'Basic fight mechanics', created:now() },
-    { id:uid(), game:'R-Fighters', title:'Character Roster', date:'2026-06-01', status:'active', desc:'8 playable characters', created:now() }
-  ];
+  DB.milestones = [];
   DB.bugs = [];
-  DB.activity = [{ id:uid(), text:'Portal initialized via JSONBin', by:'System', time:now() }];
+  DB.activity = [{ id:uid(), text:'Portal initialized via MongoDB Atlas', by:'System', time:now() }];
 }
 
 // ── AUTH ──────────────────────────────────────────────────────────────────────
@@ -324,41 +304,6 @@ function pgQaDash() {
   <div style="display:flex;gap:12px"><button class="btn btn-p" onclick="sp('qa-rep',null)">+ Report Bug</button><button class="btn btn-s" onclick="sp('qa-reps',null)">My Reports</button></div>`;
 }
 
-function pgQaRep() {
-  return `<div class="ph"><h1>Report a Bug</h1></div>
-  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:24px;max-width:600px">
-    <div class="fg"><label>Game</label><select id="qb-g">${DB.games.map(g=>`<option>${esc(g.name)}</option>`).join('')}</select></div>
-    <div class="fg"><label>Title</label><input id="qb-t" placeholder="Short description"></div>
-    <div class="fg"><label>Area</label><input id="qb-a" placeholder="e.g. Character, Map, UI"></div>
-    <div class="fg"><label>Severity</label><select id="qb-s"><option value="critical">Critical</option><option value="high">High</option><option value="medium" selected>Medium</option><option value="low">Low</option></select></div>
-    <div class="fg"><label>Steps to Reproduce</label><textarea id="qb-st" placeholder="1. Go to...&#10;2. Click..."></textarea></div>
-    <div class="fg"><label>Expected Result</label><input id="qb-e" placeholder="What should happen"></div>
-    <div class="fg"><label>Actual Result</label><input id="qb-ac" placeholder="What actually happened"></div>
-    <div class="fg"><label>Screenshot Link</label><input id="qb-i" placeholder="https://..."></div>
-    <button class="btn btn-p" onclick="submitQaBug()">Submit Bug Report</button>
-  </div>`;
-}
-
-function pgQaReps() {
-  const mb=[...DB.bugs].filter(b=>b.reporterId===CU.id).reverse();
-  return `<div class="ph"><h1>My Reports</h1></div>
-  <div class="tw">${mb.length?`<table><thead><tr><th>Title</th><th>Game</th><th>Severity</th><th>Status</th><th>Date</th></tr></thead><tbody>
-    ${mb.map(b=>`<tr><td>${esc(b.title)}</td><td><span class="gt">${esc(b.game)}</span></td><td>${sb(b.severity)}</td><td>${stb(b.status)}</td><td style="color:var(--tx2)">${fd(b.created)}</td></tr>`).join('')}
-  </tbody></table>`:'<div class="es">No reports yet.</div>'}</div>`;
-}
-
-function pgDevDash() {
-  const ob=DB.bugs.filter(b=>b.status==='open').length;
-  const ip=DB.bugs.filter(b=>b.status==='in_progress').length;
-  const cr=DB.bugs.filter(b=>b.severity==='critical'&&b.status!=='fixed').length;
-  return `<div class="ph"><h1>Dev Dashboard</h1></div>
-  <div class="sg">
-    <div class="sc"><div class="sl2">Open Bugs</div><div class="sv red">${ob}</div></div>
-    <div class="sc"><div class="sl2">In Progress</div><div class="sv yellow">${ip}</div></div>
-    <div class="sc"><div class="sl2">Critical</div><div class="sv red">${cr}</div></div>
-  </div>`;
-}
-
 // ── MODALS ────────────────────────────────────────────────────────────────────
 function openUserModal(uid2) {
   const gc = document.getElementById('gs-boxes');
@@ -486,6 +431,41 @@ async function saveGame() {
   if(!name){toast('Enter a name','error');return;}
   DB.games.push({id:uid(),name,status:document.getElementById('mg-s').value,desc:document.getElementById('mg-d').value.trim(),created:now()});
   log(`Game added: ${name}`);showL('Saving...');await dbWrite();hideL();cm('m-game');toast('Game added!','success');sp('games',document.querySelector('.ni.active'));
+}
+
+function pgQaRep() {
+  return `<div class="ph"><h1>Report a Bug</h1></div>
+  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:24px;max-width:600px">
+    <div class="fg"><label>Game</label><select id="qb-g">${DB.games.map(g=>`<option>${esc(g.name)}</option>`).join('')}</select></div>
+    <div class="fg"><label>Title</label><input id="qb-t" placeholder="Short description"></div>
+    <div class="fg"><label>Area</label><input id="qb-a" placeholder="e.g. Character, Map, UI"></div>
+    <div class="fg"><label>Severity</label><select id="qb-s"><option value="critical">Critical</option><option value="high">High</option><option value="medium" selected>Medium</option><option value="low">Low</option></select></div>
+    <div class="fg"><label>Steps to Reproduce</label><textarea id="qb-st" placeholder="1. Go to...&#10;2. Click..."></textarea></div>
+    <div class="fg"><label>Expected Result</label><input id="qb-e" placeholder="What should happen"></div>
+    <div class="fg"><label>Actual Result</label><input id="qb-ac" placeholder="What actually happened"></div>
+    <div class="fg"><label>Screenshot Link</label><input id="qb-i" placeholder="https://..."></div>
+    <button class="btn btn-p" onclick="submitQaBug()">Submit Bug Report</button>
+  </div>`;
+}
+
+function pgQaReps() {
+  const mb=[...DB.bugs].filter(b=>b.reporterId===CU.id).reverse();
+  return `<div class="ph"><h1>My Reports</h1></div>
+  <div class="tw">${mb.length?`<table><thead><tr><th>Title</th><th>Game</th><th>Severity</th><th>Status</th><th>Date</th></tr></thead><tbody>
+    ${mb.map(b=>`<tr><td>${esc(b.title)}</td><td><span class="gt">${esc(b.game)}</span></td><td>${sb(b.severity)}</td><td>${stb(b.status)}</td><td style="color:var(--tx2)">${fd(b.created)}</td></tr>`).join('')}
+  </tbody></table>`:'<div class="es">No reports yet.</div>'}</div>`;
+}
+
+function pgDevDash() {
+  const ob=DB.bugs.filter(b=>b.status==='open').length;
+  const ip=DB.bugs.filter(b=>b.status==='in_progress').length;
+  const cr=DB.bugs.filter(b=>b.severity==='critical'&&b.status!=='fixed').length;
+  return `<div class="ph"><h1>Dev Dashboard</h1></div>
+  <div class="sg">
+    <div class="sc"><div class="sl2">Open Bugs</div><div class="sv red">${ob}</div></div>
+    <div class="sc"><div class="sl2">In Progress</div><div class="sv yellow">${ip}</div></div>
+    <div class="sc"><div class="sl2">Critical</div><div class="sv red">${cr}</div></div>
+  </div>`;
 }
 
 async function submitQaBug() {
