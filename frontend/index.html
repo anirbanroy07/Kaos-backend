@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KaOS Games Portal</title>
+<link rel="stylesheet" href="./style.css">
+</head>
+<body>
+<div id="lo"><div class="sp"></div><div class="lt2" id="lt2">Loading...</div></div>
+<div id="toast"></div>
+
+<div id="ls">
+  <div class="login-box">
+    <div class="login-logo">
+      <div class="lt">Ka<span>OS</span> Games</div>
+      <div class="ls">Studio Portal</div>
+    </div>
+    <div class="fg"><label>Username</label><input id="lu" placeholder="Enter username" autocomplete="username"></div>
+    <div class="fg"><label>Password</label><input type="password" id="lp" placeholder="Enter password" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"></div>
+    <div class="remrow"><input type="checkbox" id="rem"><label for="rem">Keep me signed in</label></div>
+    <button class="btn-login" onclick="doLogin()">Sign In</button>
+    <div class="lerr" id="lerr"></div>
+  </div>
+</div>
+
+<div id="app">
+  <div class="sidebar">
+    <div class="sl"><div class="st">Ka<span>OS</span></div><div class="ss">Studio Portal</div></div>
+    <div id="nav"></div>
+    <div class="sf">
+      <div class="uc">
+        <div class="uav" id="uav">A</div>
+        <div class="ui"><div class="un" id="uname">Admin</div><div class="ur" id="urole">admin</div></div>
+      </div>
+      <button class="btn-lo" onclick="doLogout()">Sign Out</button>
+    </div>
+  </div>
+  <div class="main" id="mc"></div>
+</div>
+
+<div class="mo" id="m-user">
+  <div class="mb">
+    <h2 id="mu-ttl">Add User</h2>
+    <div class="fg"><label>Full Name</label><input id="mu-n" placeholder="e.g. John Smith"></div>
+    <div class="fg"><label>Username</label><input id="mu-u" placeholder="e.g. john_smith"></div>
+    <div class="fg"><label>Password</label><input type="password" id="mu-p" placeholder="Password"></div>
+    <div class="fg"><label>Role</label>
+      <select id="mu-r" onchange="toggleGS()">
+        <option value="admin">Admin</option><option value="client">Client</option>
+        <option value="qa">QA Tester</option><option value="dev">Developer</option><option value="pm">Project Manager</option>
+      </select>
+    </div>
+    <div class="fg" id="gs-grp"><label>Assign Projects</label><div class="cbg" id="gs-boxes"></div></div>
+    <div class="mf">
+      <button class="btn btn-s" onclick="cm('m-user')">Cancel</button>
+      <button class="btn btn-p" onclick="saveUser()">Save</button>
+    </div>
+  </div>
+</div>
+
+<div class="mo" id="m-bug">
+  <div class="mb">
+    <h2>Report Bug</h2>
+    <div class="fg"><label>Title</label><input id="mb-t" placeholder="Short description"></div>
+    <div class="fg"><label>Game</label><select id="mb-g"></select></div>
+    <div class="fg"><label>Area</label><input id="mb-a" placeholder="e.g. Character, Map, UI"></div>
+    <div class="fg"><label>Severity</label><select id="mb-s"><option value="critical">Critical</option><option value="high">High</option><option value="medium" selected>Medium</option><option value="low">Low</option></select></div>
+    <div class="fg"><label>Steps to Reproduce</label><textarea id="mb-st" placeholder="1. Go to...&#10;2. Click...&#10;3. Bug appears"></textarea></div>
+    <div class="fg"><label>Expected Result</label><input id="mb-e" placeholder="What should happen"></div>
+    <div class="fg"><label>Actual Result</label><input id="mb-ac" placeholder="What actually happened"></div>
+    <div class="fg"><label>Screenshot Link (optional)</label><input id="mb-i" placeholder="https://..."></div>
+    <div class="mf">
+      <button class="btn btn-s" onclick="cm('m-bug')">Cancel</button>
+      <button class="btn btn-p" onclick="saveBug()">Submit</button>
+    </div>
+  </div>
+</div>
+
+<div class="mo" id="m-ms">
+  <div class="mb">
+    <h2 id="mm-ttl">Add Milestone</h2>
+    <div class="fg"><label>Game</label><select id="mm-g"></select></div>
+    <div class="fg"><label>Title</label><input id="mm-n" placeholder="e.g. Alpha Release"></div>
+    <div class="fg"><label>Due Date</label><input type="date" id="mm-d"></div>
+    <div class="fg"><label>Status</label><select id="mm-s"><option value="pending">Pending</option><option value="active">In Progress</option><option value="done">Done</option></select></div>
+    <div class="fg"><label>Description</label><textarea id="mm-desc" placeholder="Optional details"></textarea></div>
+    <div class="mf">
+      <button class="btn btn-s" onclick="cm('m-ms')">Cancel</button>
+      <button class="btn btn-p" onclick="saveMS()">Save</button>
+    </div>
+  </div>
+</div>
+
+<div class="mo" id="m-game">
+  <div class="mb">
+    <h2>Add Game / Project</h2>
+    <div class="fg"><label>Name</label><input id="mg-n" placeholder="e.g. R-Fighters"></div>
+    <div class="fg"><label>Status</label><select id="mg-s"><option value="development">In Development</option><option value="active">Active</option><option value="beta">Beta</option><option value="released">Released</option><option value="paused">Paused</option></select></div>
+    <div class="fg"><label>Description</label><textarea id="mg-d" placeholder="Brief description"></textarea></div>
+    <div class="mf">
+      <button class="btn btn-s" onclick="cm('m-game')">Cancel</button>
+      <button class="btn btn-p" onclick="saveGame()">Save</button>
+    </div>
+  </div>
+</div>
+
+<script src="./script.js"></script>
+</body>
+</html> 

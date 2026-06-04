@@ -1,0 +1,39 @@
+{
+  "users": [
+    {
+      "id": "odf9q4yjmps5ejx9",
+      "name": "Admin",
+      "username": "admin",
+      "password": "password123",
+      "role": "admin",
+      "games": [],
+      "created": "2026-05-30T09:28:18.525Z"
+    }
+  ],
+  "bugs": [],
+  "milestones": [],
+  "games": [
+    {
+      "id": "qh6z3zpjmps5ejx8",
+      "name": "R-Fighters",
+      "status": "development",
+      "desc": "Fighting game on Roblox",
+      "created": "2026-05-30T09:28:18.524Z"
+    },
+    {
+      "id": "s9gf6x0imps5ejx8",
+      "name": "Formula",
+      "status": "development",
+      "desc": "Racing game on Roblox",
+      "created": "2026-05-30T09:28:18.525Z"
+    }
+  ],
+  "activity": [
+    {
+      "id": "qgzvsiy8mps5ejx9",
+      "text": "Portal initialized locally",
+      "by": "System",
+      "time": "2026-05-30T09:28:18.525Z"
+    }
+  ]
+}
