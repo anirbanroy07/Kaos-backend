@@ -1,5 +1,5 @@
 const MK = "$2a$10$6YYYPd5hjRWm8dbvcWSIWebcGuYrdJhWq//j2fJMZDUXpsB5jg1v6";
-const BURL = "https://api.jsonbin.io/v3";
+const BURL = "https://kaos-backend.onrender.com/api/data";
 let BIN_ID = localStorage.getItem('kg_bin') || null;
 let CU = null;
 let DB = { users:[], bugs:[], milestones:[], games:[], activity:[] };
